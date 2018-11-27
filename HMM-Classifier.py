@@ -1,25 +1,30 @@
 
 from autologging import logged
 import logging, sys
+import pandas as pd
 
 @logged
 class HMM_Classifier:
 
-    _classifier_version = 0.0
-
-    @property
-    def classifier_version(self):
-        return self._classifier_version
-
-
     def __init__(self):
-        logging.basicConfig(level=logging.INFO,
-            filename='Logs/HMM-ClassifierV{}.log'.format(self._classifier_version),
-            format="%(asctime)s %(levelname)s:%(name)s:%(funcName)s:%(message)s")
-
+        
+        self.classifier_version = 0.0
+        
+        logging.basicConfig(
+            level=logging.INFO,
+            filename='Logs/HMM-ClassifierV{}.log'
+                .format(self.classifier_version),
+            format="%(asctime)s|%(levelname)s|%(name)s|%(funcName)s|%(message)s")
 
     def load_data(self):
-        self.__log.info("Loading data")
+        self.df_train = pd.read_pickle("mpri_challenge/training_set.pckl")
+        self.df_validation = pd.read_pickle("mpri_challenge/validation_set.pckl")
+        self.df_test = pd.read_pickle("mpri_challenge/test_set.pckl")
+
+        self.__log.info('Data load OK')
+
+    
+
 
 if __name__ == "__main__":
 

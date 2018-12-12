@@ -56,3 +56,9 @@ après analyse des modèles de covariances du HMM le meilleur trouvé est le 'fu
 ### Problème de surapprentissage
 
 Il a été avéré que le modèle souffrait de surrapprentissage dans une version antérieur. L'erreur qui était faite était que le la prédiction et donc le calcul du score ne se fesait que sur l'ensemble de validation. On a pu deviner que le model overfittait car il était capable de faire des prédiction a plus de 80% de réussite. 
+
+### Recherche des meilleurs paramètres 
+
+Les meilleurs paramètres pour le modèle ont été trouvé en utilisant un grid search. En itérant au travers des ranges établis pour les différents paramètres du modèle on peut logger toutes les combinaisons de modèles possible et trouver les plus intéressantes. 
+
+Pour chaque modèle généré on calcule 2 f1-score. Celui du leave one out du training set et celui du validation set. Avoir ces deux valeurs nous permet de savoir si on overfit sur un des deux ensembles ou non. Dans l'idéal on souahite avoir deux scores très haut et très similaire.

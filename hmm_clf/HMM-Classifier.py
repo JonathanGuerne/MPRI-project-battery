@@ -23,7 +23,8 @@ class HMM_Classifier:
 
         self.__log.info('Data load OK')
 
-    
+
+
 
 
 if __name__ == "__main__":

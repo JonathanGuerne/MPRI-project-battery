@@ -1,17 +1,13 @@
 import datetime
-import datetime
-import os.path
 
 import numpy as np
 import pandas as pd
 from hmmlearn import hmm
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, confusion_matrix
 
-from hmm_clf.data_tools import remove_cols, split_by_quality, get_charge_list, battery_list, shuffle_df, \
-    split_training_validation, remove_cols_to_df
-from hmm_clf.evaluation_tools import evaluate_model
-from hmm_clf.file_tools import creat_file, _save
+from hmm_clf.data_tools import get_charge_list, remove_cols_to_df, battery_list, shuffle_df, split_training_validation, \
+    split_by_quality, remove_cols, add_features, normalize
+from hmm_clf.file_tools import _save
 
 
 class HMMBattery():
@@ -62,7 +58,7 @@ class HMMBattery():
 
         model_ = hmm.GaussianHMM(n_components=self.n_state,
                                  n_iter=self.n_iter[quality],
-                                 tol=0.1,
+                                 tol=0.001,
                                  covariance_type=self.covariance)
 
         df_data = quality_train_charges_list
@@ -77,7 +73,7 @@ class HMMBattery():
             for i in range(len(df_data)):
                 sub = df_data[i].values
                 sz = int(sub.shape[0] / self.factor) * self.factor
-                q_data.append(sub[:sz].reshape(-1, self.factor, 5).mean(axis=1))
+                q_data.append(sub[:sz].reshape(-1, self.factor, 6).mean(axis=1))
 
         elif self.sampeling == 'log':
             for i in range(len(df_data)):
@@ -97,92 +93,144 @@ class HMMBattery():
 
     def get_all_models(self, all_quality_train):
 
+
+         # self.nb_charge_saved = np.min([len(value) for key, value in all_quality_train.items()])
+
         self.models = [self.model_generator(1, all_quality_train[1]),
                        self.model_generator(2, all_quality_train[2]),
                        self.model_generator(3, all_quality_train[3])]
 
         return self.models
 
-
-def run_grid_search(df_train, validation_list, validation_list_hide, output_file=None):
-    if output_file is not None and not os.path.isfile(output_file):
-        creat_file(output_file)
-
-    for iter_3 in range(10, 21, 2):
-        for iter_2 in range(10, 21, 2):
-            for iter_1 in range(10, 21, 2):
-                for factor in [5, 25, 50]:
-                    for nb_charges_saved in [40, 60]:
-                        for n_state in [5, 6]:
-                            for c in ['full', 'diag']:
-                                for sampeling in ['log', 'mean']:
-                                    n_iter = {1: iter_1, 2: iter_2, 3: iter_3}
-                                    params = {'n_iter': n_iter, 'factor': factor, 'n_state': n_state,
-                                              'sampeling': sampeling, 'nb_charge_saved': nb_charges_saved,
-                                              'covariance': c}
-
-                                    eval_loocv(params, output_file)
+def test(dataset, models, verbose=False):
+    X, lengths = dataset, [len(dataset)]
+    scores = [m.score(X, lengths) for m in models]
+    if verbose:
+        print(f"Best model: {np.argmax(scores) + 1}")
+    return scores
 
 
-def eval_loocv(df_train, validation_charge_list, validation_charge_hide, params=None, output_file=None):
-    scores, classifiers = eval_params(params)
+def evaluate_model(models, valid_data, valid_hide, verbose=False):
+    labels = []
+    predictions = []
+
+    for i in range(len(valid_data)):
+        label = round(valid_data[i]['quality'].mean())
+
+        scores = test(valid_hide[i], models, verbose=verbose)
+        prediction = np.argmax(scores) + 1
+
+        labels.append(label)
+        predictions.append(prediction)
+
+    return labels, predictions
+
+def eval_params(df_train, params, verbose=False):
+    _f1_scores = []
+    _weights = []
+
+    fulltrain_charges_list = get_charge_list((df_train), False, False, False)
+
+    for battery_number in battery_list(df_train):
+
+
+        train_charges, valid_charges = split_training_validation(fulltrain_charges_list, battery_number)
+        __qal_train_charges = split_by_quality(train_charges)
+        qal_train_charges = remove_cols(__qal_train_charges)
+
+
+
+        valid_charges_hide = []
+        for charge in valid_charges:
+            valid_charges_hide.append(remove_cols_to_df(charge))
+
+        hmmB = HMMBattery(verbose=False)
+        if params is not None:
+            hmmB.load_params(params)
+        hmmB.get_all_models(qal_train_charges)
+
+        labels, preds = evaluate_model(hmmB.models, valid_charges, valid_charges_hide)
+
+        _f1_scores.append(f1_score(labels, preds, average='macro'))
+        _weights.append(len(valid_charges))
+
+        if verbose:
+            print(confusion_matrix(labels, preds))
+            print(_f1_scores[-1])
+
+
+    t = np.sum(np.multiply(_f1_scores,_weights))/sum(_weights)
+
+    #_f1_scores = [_weights[i]*_f1_scores[i] for i in range(len(_f1_scores))]
+
+    return t
+
+def eval_loocv(df_train, validation_charges_list, validation_charges_hide, params=None, output_file=None, verbose=False):
+    scores = eval_params(df_train, params, verbose=verbose)
 
     preds_all_clf = []
 
-    labels = []
+    train_charges = get_charge_list(df_train)
+    __qal_train_charges = split_by_quality(train_charges)
+    qal_train_charges = remove_cols(__qal_train_charges)
 
-    for _hmm in classifiers:
-        labels, preds = evaluate_model(_hmm.models, validation_charges_list, validation_charges_hide)
-        preds_all_clf.append(preds)
+    hmmB = HMMBattery(verbose=False)
+    if params is not None:
+        hmmB.load_params(params)
+    hmmB.get_all_models(qal_train_charges)
 
-    preds_valid = np.round(np.mean(preds_all_clf, axis=0))
+    labels, preds_valid = evaluate_model(hmmB.models, validation_charges_list, validation_charges_hide)
 
-    f1_train = np.mean(scores)
+    f1_train = scores
     f1_valid = f1_score(labels, preds_valid, average='macro')
 
     print("f1-score training set: {}".format(f1_train))
     print("f1-score validation set: {}".format(f1_valid))
 
-    if output_file != None:
-        _save(output_file, _hmm, f1_valid, f1_train)
-
-
-def eval_loocv_(params=None, output_file=None):
-    scores, classifiers = eval_params(params)
-
-    all_train_charges = remove_cols(split_by_quality(get_charge_list(df_train)))
-    _hmm = HMMBattery(verbose=False)
-
-    if params is not None:
-        _hmm.load_params(params)
-
-    _hmm.get_all_models(all_train_charges)
-
-    labels, preds = evaluate_model(_hmm.models, validation_charges_list, validation_charges_hide)
-    print(confusion_matrix(labels, preds))
-
-    f1_train = np.mean(scores)
-    f1_valid = f1_score(labels, preds, average='macro')
-
-    print("f1-score training set: {}".format(f1_train))
-    print("f1-score validation set: {}".format(f1_valid))
+    print(confusion_matrix(labels,preds_valid))
 
     if output_file != None:
-        _save(output_file, _hmm, f1_valid, f1_train)
+        _save(output_file, hmmB, f1_valid, f1_train)
 
+    del hmmB
+    del preds_all_clf
+    del labels
 
+    return f1_train
 
 if __name__ == '__main__':
 
     df_validation = pd.read_pickle("../mpri_challenge/validation_set.pckl")
     df_train = pd.read_pickle("../mpri_challenge/training_set.pckl")
 
+
+
+    df_validation = add_features(df_validation)
+    df_validation = normalize(df_validation)
+
+    df_train = add_features(df_train)
+    df_train = normalize(df_train)
+
+
     validation_charges_list = get_charge_list(df_validation, False, False, False)
     validation_charges_hide = []
+
     for charge in validation_charges_list:
         validation_charges_hide.append(remove_cols_to_df(charge))
 
     now = datetime.datetime.now()
-    file_name = now.strftime("%d-%m-%y_search.csv")
+    file_name = now.strftime("%d-%m-%y_50_charges_70_factor.csv")
 
-    run_grid_search(file_name)
+    params = {'n_iter': {1: 16, 2: 16, 3: 18},
+           'factor': 70,
+           'n_state': 6,
+           'sampeling': 'mean',
+           'nb_charge_saved': 53,
+           'covariance': 'diag'}
+
+
+    eval_loocv(df_train,validation_charges_list,validation_charges_hide,params, verbose=True)
+
+    # from hmm_clf.Grid_search import run_grid_search
+    # best_params = run_grid_search(df_train, validation_charges_list, validation_charges_hide, file_name, verbose=True)
+    # print(best_params)

@@ -41,7 +41,7 @@ class RandomForest:
                 file.write(log)
 
     def fit_all(self):
-        self.model.grid_search_fit()
+        #self.model.grid_search_fit()
         self.model.leave_one_out()
         self.model.predict_test()
 
@@ -53,9 +53,5 @@ if __name__ == '__main__':
         'max_features': ['auto', 'sqrt', 'log2']
     }
 
-    rf = RandomForest(param_grid, log=True, include_discharges=True)
+    rf = RandomForest(param_grid, log=False, include_discharges=True)
     rf.fit_all()
-
-
-
-

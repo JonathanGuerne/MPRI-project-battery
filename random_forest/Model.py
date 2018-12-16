@@ -42,7 +42,7 @@ class Model:
             with open("log/log.txt", "a") as file:
                 file.write(log)
 
-    def get_features_charge_item(self, battery_charge_df, type):
+    def get_features_item(self, battery_charge_df, type):
         df_size = len(battery_charge_df['voltage_measured'])
         df_size_third = int(df_size/3)
 
@@ -138,25 +138,33 @@ class Model:
         battery_df = df[df['battery_nb'] == battery_id]
         distinct_charges = df[self.type].dropna().unique()
 
+        discharge_id = 1
+
         for charge_id in distinct_charges:
             battery_charge_df = battery_df[battery_df[self.type] == charge_id]
-            battery_discharge_df = battery_df[battery_df['discharge_nb'] == charge_id]
-
-            if battery_charge_df.empty or battery_discharge_df.empty:
-                continue
-
+            battery_discharge_df = battery_df[battery_df['discharge_nb'] == discharge_id]
             features = {}
-            features_charge = self.get_features_charge_item(battery_charge_df, 'charge')
-            features.update(features_charge)
 
-            if self.include_discharges:
-                features_discharge = self.get_features_charge_item(battery_discharge_df, 'discharge')
-                features.update(features_discharge)
+            if battery_discharge_df.empty:
+                discharge_id -= 1
+                battery_discharge_df = battery_df[battery_df['discharge_nb'] == discharge_id]
 
-            if 'quality' in battery_charge_df.keys():
-                quality = int(round(np.nanmean(battery_charge_df['quality']), 0))
-                features['label'] = quality
-            features_list.append(features)
+            if not battery_charge_df.empty:
+                features_charge = self.get_features_item(battery_charge_df, 'charge')
+                features.update(features_charge)
+
+                if self.include_discharges:
+                    features_discharge = self.get_features_item(battery_discharge_df, 'discharge')
+                    features.update(features_discharge)
+                    discharge_id += 1
+
+                if 'quality' in battery_charge_df.keys() and 'quality' in battery_discharge_df.keys():
+                    quality_charge = int(round(np.nanmean(battery_charge_df['quality']), 0))
+                    quality_discharge = int(round(np.nanmean(battery_discharge_df['quality']), 0))
+                    quality = int(round((quality_charge+quality_discharge)/2))
+                    features['label'] = quality
+
+                features_list.append(features)
 
         return features_list
 
@@ -191,7 +199,7 @@ class Model:
         f1_test = np.mean(np.array(f1_score_test_list))
 
         self.print_log('PREDICTION VALIDATION : {}'.format(list(prediction_validation)))
-        print('F1 SCORE VALIDATION COMPARISON : {}',format(f1_score(y_validation, prediction_validation, average='macro')))
+        print('F1 SCORE VALIDATION COMPARISON : {}'.format(f1_score(y_validation, prediction_validation, average='macro')))
         self.print_log('F1 SCORE VALIDATION :{}'.format(f1_validation))
         self.print_log('F1 SCORE TEST :{}'.format(f1_test))
 

@@ -14,14 +14,14 @@ def run_grid_search(df_train, validation_charges_list, validation_charges_hide, 
     best_f1 = 0
     best_params = None
 
-    for iter_3 in range(20,14,-1):
-        for iter_2 in range(20,14,-1):
-            for iter_1 in range(20,14,-1):
+    for iter_3 in range(5,9):
+        for iter_2 in range(5,9):
+            for iter_1 in range(5,9):
                 for n_state in [6]:
                     for c in ['diag']:#['full', 'diag', 'tied']:
-                        for sampeling in ['mean']:#['log', 'mean', 'homogene']:
+                        for sampeling in ['None']:#['log', 'mean', 'homogene']:
                             for factor in [70]:
-                                for nb_charges_saved in [53,54]:
+                                for nb_charges_saved in [80]:
 
                                     f1_mean = []
 
@@ -30,7 +30,7 @@ def run_grid_search(df_train, validation_charges_list, validation_charges_hide, 
                                               'sampeling': sampeling, 'nb_charge_saved': nb_charges_saved,
                                               'covariance': c}
 
-                                    for _ in range(2):
+                                    for _ in range(1):
 
                                         try:
                                             print('set of params {}'.format(params))
@@ -39,8 +39,8 @@ def run_grid_search(df_train, validation_charges_list, validation_charges_hide, 
                                                             params,
                                                             output_file, verbose=verbose)
                                             f1_mean.append(f1)
-                                        except ValueError:
-                                            print('Error with set of params')
+                                        except ValueError as e:
+                                            print('Error with set of params : {}'.format(e))
 
                                     f1_mean = np.mean(f1_mean)
                                     if f1_mean > best_f1:

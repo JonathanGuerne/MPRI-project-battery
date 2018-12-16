@@ -23,9 +23,14 @@ def shuffle_df(df):
 
 
 def get_charge_list(df, drop_quality=False, drop_charge_nb=False, drop_battery_nb=False):
-    df = df[
-        ['battery_nb', 'charge_nb', 'voltage_measured', 'current_measured', 'temperature_measured', 'current_charge',
-         'voltage_charge', 'puissance_charge', 'quality']]
+
+    if drop_quality:
+        df = df[  ['battery_nb', 'charge_nb', 'voltage_measured', 'current_measured', 'temperature_measured', 'current_charge',
+             'voltage_charge', 'puissance_charge']]
+    else:
+        df = df[
+            ['battery_nb', 'charge_nb', 'voltage_measured', 'current_measured', 'temperature_measured', 'current_charge',
+             'voltage_charge', 'puissance_charge', 'quality']]
 
 
     if 'quality' in df.columns and drop_quality:
@@ -124,3 +129,24 @@ def normalize(df):
         df[f] = (df[f] - df[f].min()) / (df[f].max() - df[f].min())
 
     return df
+
+
+def gradient(df_list, nb_block=2):
+    lst = []
+    for df in df_list:
+
+        grad_df = pd.DataFrame(columns=list_features)
+        block_size = int(df.shape[0]/nb_block)
+
+        for k in range(nb_block):
+
+            df_temp = df[k*block_size:(k+1)*block_size]
+            features = {}
+
+            for col in list_features:
+                features[col] = np.linalg.norm(df_temp[col],ord=0)
+
+            grad_df = grad_df.append(features,ignore_index=True)
+
+        lst.append(grad_df)
+    return lst

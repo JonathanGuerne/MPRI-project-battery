@@ -5,9 +5,9 @@ import pandas as pd
 from hmmlearn import hmm
 from sklearn.metrics import f1_score, confusion_matrix
 
-from hmm_clf.data_tools import get_charge_list, remove_cols_to_df, battery_list, shuffle_df, split_training_validation, \
+from data_tools import get_charge_list, remove_cols_to_df, battery_list, shuffle_df, split_training_validation, \
     split_by_quality, remove_cols, add_features, normalize, gradient
-from hmm_clf.file_tools import _save
+from file_tools import _save
 
 
 class HMMBattery():
@@ -204,7 +204,7 @@ def eval_loocv(df_train, validation_charges_list, validation_charges_hide, param
     del preds_all_clf
     del labels
 
-    return f1_train
+    return f1_valid, f1_train
 
 def predict(df_train,test_data_hide,params,verbose=False):
 
@@ -232,9 +232,9 @@ def predict(df_train,test_data_hide,params,verbose=False):
 
 if __name__ == '__main__':
 
-    df_validation = pd.read_pickle("../mpri_challenge/validation_set.pckl")
-    df_train = pd.read_pickle("../mpri_challenge/training_set.pckl")
-    df_test = pd.read_pickle("../mpri_challenge/test_set.pckl")
+    df_validation = pd.read_pickle("../datas/validation_set.pckl")
+    df_train = pd.read_pickle("../datas/training_set.pckl")
+    df_test = pd.read_pickle("../datas/test_set.pckl")
 
     df_validation = add_features(df_validation)
     df_validation = normalize(df_validation)
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     preds = predict(df_train,test_charge_hide,params)
     print(preds)
 
-    # eval_loocv(df_train,validation_charges_list,validation_charges_hide,params, verbose=False)
+    eval_loocv(df_train,validation_charges_list,validation_charges_hide,params, verbose=False)
 
     # from hmm_clf.Grid_search import run_grid_search
     # best_params = run_grid_search(df_train, validation_charges_list, validation_charges_hide, file_name, verbose=False)

@@ -10,6 +10,7 @@ from sklearn.metrics import f1_score
 from random import shuffle
 from numpy import linalg as la
 
+
 class Model:
 
     def __init__(self, df_train, df_validation, df_test, param_grid, log, include_discharges):
@@ -18,8 +19,8 @@ class Model:
         self.type = 'charge_nb'
         self.include_discharges = include_discharges
         # Models
-        self.random_forest = RandomForestClassifier(class_weight='balanced', max_depth=None, max_features='auto', n_estimators=50,
-                                                    random_state=1)
+        self.random_forest = RandomForestClassifier(class_weight='balanced', max_depth=None, max_features='auto',
+                                                    n_estimators=50, random_state=1)
         self.clf = GridSearchCV(self.random_forest, param_grid, cv=10, n_jobs=-1)
         self.models_list = []
         # Train data
@@ -42,77 +43,26 @@ class Model:
             with open("log/log.txt", "a") as file:
                 file.write(log)
 
-    def get_features_item(self, battery_charge_df, type):
-        df_size = len(battery_charge_df['voltage_measured'])
-        df_size_third = int(df_size/3)
+    @staticmethod
+    def get_features_item(battery_charge_df, type):
 
         volt_df = battery_charge_df['voltage_measured']
         curr_df = battery_charge_df['current_measured']
         temp_df = battery_charge_df['temperature_measured']
         curr_charge_df = battery_charge_df['current_charge']
         volt_charge_df = battery_charge_df['voltage_charge']
-        cap_df = battery_charge_df['capacity']
 
-
-        voltage_measured1 = np.mean(volt_df.iloc[0:df_size_third])
-        voltage_measured2 = np.mean(volt_df.iloc[df_size_third:df_size_third * 2])
-        voltage_measured3 = np.mean(volt_df.iloc[df_size_third * 2:df_size])
         voltage_gradient = la.norm(np.gradient(volt_df), ord=0)
-
-        current_measured1 = np.mean(curr_df.iloc[0:df_size_third])
-        current_measured2 = np.mean(curr_df.iloc[df_size_third:df_size_third * 2])
-        current_measured3 = np.mean(curr_df.iloc[df_size_third * 2:df_size])
-        current_gradient = la.norm(np.gradient(volt_df), ord=0)
-
-        # power1 = voltage_measured1 * current_measured1
-        # power2 = voltage_measured2 * current_measured2
-        # power3 = voltage_measured3 * current_measured3
-
-        temperature_measured1 = np.mean(temp_df.iloc[0:df_size_third])
-        temperature_measured2 = np.mean(temp_df.iloc[df_size_third:df_size_third * 2])
-        temperature_measured3 = np.mean(temp_df.iloc[df_size_third * 2:df_size])
+        current_gradient = la.norm(np.gradient(curr_df), ord=0)
         temperature_gradient = la.norm(np.gradient(temp_df), ord=0)
-
-        current_charge1 = np.mean(curr_charge_df.iloc[0:df_size_third])
-        current_charge2 = np.mean(curr_charge_df.iloc[df_size_third:df_size_third * 2])
-        current_charge3 = np.mean(curr_charge_df.iloc[df_size_third * 2:df_size])
         current_charge_gradient = la.norm(np.gradient(curr_charge_df), ord=0)
-
-        voltage_charge1 = np.mean(volt_charge_df.iloc[0:df_size_third])
-        voltage_charge2 = np.mean(volt_charge_df.iloc[df_size_third:df_size_third * 2])
-        voltage_charge3 = np.mean(volt_charge_df.iloc[df_size_third * 2:df_size])
         voltage_charge_gradient = la.norm(np.gradient(volt_charge_df), ord=0)
 
-        # power_charge1 = current_charge1 * voltage_charge1
-        # power_charge2 = current_charge2 * voltage_charge2
-        # power_charge3 = current_charge3 * voltage_charge3
-
-        # features = {'voltage_measured1_{}'.format(type): voltage_measured1, 'voltage_measured2_{}'.format(type): voltage_measured2,
-        #             'voltage_measured3_{}'.format(type): voltage_measured3, 'current_measured1_{}'.format(type): current_measured1,
-        #             'current_measured2_{}'.format(type): current_measured2, 'current_measured3_{}'.format(type): current_measured3,
-        #             'temperature_measured1_{}'.format(type): temperature_measured1, 'temperature_measured2_{}'.format(type): temperature_measured2,
-        #             'temperature_measured3_{}'.format(type): temperature_measured3, 'current_charge1_{}'.format(type) : current_charge1,
-        #             'current_charge2_{}'.format(type) : current_charge2, 'current_charge3_{}'.format(type) : current_charge3,
-        #             'voltage_charge1_{}'.format(type): voltage_charge1, 'voltage_charge2_{}'.format(type): voltage_charge2,
-        #             'voltage_charge3_{}'.format(type): voltage_charge3,
-        #             'voltage_gradient_{}'.format(type): voltage_gradient, 'current_gradient_{}'.format(type): current_gradient,
-        #             'temperature_gradient_{}'.format(type): temperature_gradient, 'current_charge_gradient_{}'.format(type): current_charge_gradient,
-        #             'voltage_charge_gradient_{}'.format(type): voltage_charge_gradient}
-
-        features = {'voltage_gradient_{}'.format(type): voltage_gradient, 'current_gradient_{}'.format(type): current_gradient,
-                    'temperature_gradient_{}'.format(type): temperature_gradient, 'current_charge_gradient_{}'.format(type): current_charge_gradient,
+        features = {'voltage_gradient_{}'.format(type): voltage_gradient,
+                    'current_gradient_{}'.format(type): current_gradient,
+                    'temperature_gradient_{}'.format(type): temperature_gradient,
+                    'current_charge_gradient_{}'.format(type): current_charge_gradient,
                     'voltage_charge_gradient_{}'.format(type): voltage_charge_gradient}
-
-        if battery_charge_df['capacity'].any():
-            capacity1 = np.mean(cap_df.iloc[0:df_size_third])
-            capacity2 = np.mean(cap_df.iloc[df_size_third:df_size_third * 2])
-            capacity3 = np.mean(cap_df.iloc[df_size_third * 2:df_size])
-            capacity_gradient = la.norm(np.gradient(cap_df), ord=0)
-
-            # features['capacity1'] = capacity1
-            # features['capacity2'] = capacity2
-            # features['capacity3'] = capacity3
-            features['capacity_gradient'] = capacity_gradient
 
         return features
 

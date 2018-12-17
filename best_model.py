@@ -3,6 +3,7 @@ from SVM.svm import SVM
 # from hmm_clf.data_tools import get_charge_list, remove_cols_to_df, add_features, gradient
 from hmm_clf.HMM_as_script import predict, eval_loocv, validation, validation_prediction_hmm
 import pandas as pd
+import numpy as np
 import datetime
 
 class Fusion:
@@ -15,7 +16,7 @@ class Fusion:
 
     def run_hmm(self):
         predictions, f1_validation, f1_test = validation_prediction_hmm()
-        self.result_dict['hmm'] = [predictions, f1_validation, f1_test]
+        self.result_dict['hmm'] = [predictions, np.mean([f1_validation, f1_test])]
 
     def run_rf(self):
         param_grid = {
@@ -25,8 +26,10 @@ class Fusion:
             'max_features': ['auto', 'sqrt', 'log2']
         }
         rf = RandomForest(param_grid, self.df_train, self.df_validation, self.df_test, log=False, include_discharges=True)
-        prediction, f1_validation, f1_test = rf.model.leave_one_out()
-        self.result_dict['rf'] = [prediction, f1_validation, f1_test]
+      #  rf.model.grid_search_fit()
+        _, f1_validation, f1_test = rf.model.leave_one_out()
+        prediction  = rf.model.predict_test()
+        self.result_dict['rf'] = [prediction, np.mean([f1_validation,f1_test])]
 
     def run_svm(self):
         param_grid = {
@@ -37,8 +40,10 @@ class Fusion:
             'decision_function_shape': ['ovo', 'ovr']
         }
         svm = SVM(param_grid, self.df_train, self.df_validation, self.df_test, log=False, include_discharges=True)
-        prediction, f1_validation, f1_test = svm.model.leave_one_out()
-        self.result_dict['svm'] = [prediction, f1_validation, f1_test]
+     #   svm.model.grid_search_fit()
+        _, f1_validation, f1_test = svm.model.leave_one_out()
+        prediction = svm.model.predict_test()
+        self.result_dict['svm'] = [prediction,np.mean([f1_test,f1_validation])]
 
     def define_best(self):
         list_models = ['hmm', 'rf', 'svm']
@@ -46,14 +51,33 @@ class Fusion:
         self.run_rf()
         self.run_svm()
 
-        for m1 in list_models:
-            current_model = self.result_dict[m1]
+        pred_size = len(self.result_dict['svm'][0])
 
-            for m2 in list_models:
-                if m2 is not current_model:
-                    if abs(self.result_dict[current_model][1] - self.result_dict[m2][1]) < 10:
-                        print(m2)
-                        print(current_model)
+        fusion_preds = []
+        for i in range(pred_size):
+
+            print("value {}".format(i+1))
+            vote = {1:0,2:0,3:0}
+
+            for m in list_models:
+                pred = self.result_dict[m][0][i]
+                print("model {} :  {}".format(m,pred))
+                vote[int(pred)] += self.result_dict[m][1]
+            print("final decision {}".format(max(vote, key=vote.get)))
+            fusion_preds.append(max(vote, key=vote.get))
+
+        results = np.array(fusion_preds)
+        # Save your results
+        np.savetxt("datas/Fusion_2BTree_Fusion.csv", results.astype(int), fmt='%i')
+
+        # for m1 in list_models:
+        #     current_model = self.result_dict[m1]
+        #
+        #     for m2 in list_models:
+        #         if m2 is not current_model:
+        #             if abs(self.result_dict[current_model][1] - self.result_dict[m2][1]) < 10:
+        #                 print(m2)
+        #                 print(current_model)
 
 
 if __name__ == '__main__':

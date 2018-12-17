@@ -319,6 +319,10 @@ if __name__ == '__main__':
     print(preds)
 
 
+    results = np.array(preds)
+    # Save your results
+    np.savetxt("../datas/HMM_2BTree_Guerne.txt", results.astype(int), fmt='%i')
+
     # from hmm_clf.Grid_search import run_grid_search
     # best_params = run_grid_search(df_train, validation_charges_list, validation_charges_hide, file_name, verbose=False)
     # print(best_params)

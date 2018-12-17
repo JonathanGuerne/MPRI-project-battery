@@ -65,3 +65,29 @@
 2018-12-17 10:49:03.935590 - --------------------------------------------------- NEW RUN ---------------------------------------------------
 2018-12-17 10:49:03.943578 - PARAM GRID : {'C': [10, 100], 'kernel': ['rbf', 'sigmoid'], 'coef0': [0.0], 'gamma': ['auto', 1e-06], 'decision_function_shape': ['ovo', 'ovr']}
 2018-12-17 10:49:03.950561 - /!\ WARNING : DISCHARGE DATA ARE TAKE IN COUNT
+2018-12-17 15:37:51.184314 - --------------------------------------------------- NEW RUN ---------------------------------------------------
+2018-12-17 15:37:51.190780 - PARAM GRID : {'C': [10, 100], 'kernel': ['rbf', 'sigmoid'], 'coef0': [0.0], 'gamma': ['auto', 1e-06], 'decision_function_shape': ['ovo', 'ovr']}
+2018-12-17 15:37:51.197767 - /!\ WARNING : DISCHARGE DATA ARE TAKE IN COUNT
+2018-12-17 15:37:59.626771 - BEST PARAMETERS : {'C': 10, 'coef0': 0.0, 'decision_function_shape': 'ovo', 'gamma': 1e-06, 'kernel': 'rbf'}
+2018-12-17 15:37:59.978620 - FEATURES : ['capacity_gradient', 'current_charge_gradient_charge', 'current_charge_gradient_discharge', 'current_gradient_charge', 'current_gradient_discharge', 'temperature_gradient_charge', 'temperature_gradient_discharge', 'voltage_charge_gradient_charge', 'voltage_charge_gradient_discharge', 'voltage_gradient_charge', 'voltage_gradient_discharge']
+2018-12-17 15:38:20.788230 - PREDICTION VALIDATION : [2.0, 2.0, 1.0, 2.0, 2.0, 1.0, 2.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+2018-12-17 15:38:20.796350 - F1 SCORE VALIDATION :0.7300596261896571
+2018-12-17 15:38:20.802288 - F1 SCORE TEST :0.7635271709492991
+2018-12-17 15:38:21.109217 - PREDICTION TEST : [3.0, 1.0, 3.0, 3.0, 3.0, 1.0, 2.0, 2.0, 2.0, 3.0, 2.0, 3.0, 2.0, 2.0, 1.0, 2.0, 1.0, 1.0, 2.0, 3.0, 3.0, 3.0, 3.0, 2.0, 1.0, 1.0, 1.0, 3.0]
+2018-12-17 15:40:39.858453 - --------------------------------------------------- NEW RUN ---------------------------------------------------
+2018-12-17 15:40:39.864460 - PARAM GRID : {'C': [10, 100], 'kernel': ['rbf', 'sigmoid'], 'coef0': [0.0], 'gamma': ['auto', 1e-06], 'decision_function_shape': ['ovo', 'ovr']}
+2018-12-17 15:40:39.871428 - /!\ WARNING : DISCHARGE DATA ARE TAKE IN COUNT
+2018-12-17 15:40:56.970562 - BEST PARAMETERS : {'C': 10, 'coef0': 0.0, 'decision_function_shape': 'ovo', 'gamma': 1e-06, 'kernel': 'rbf'}
+2018-12-17 15:41:02.711995 - FEATURES : ['capacity_gradient', 'current_charge_gradient_charge', 'current_charge_gradient_discharge', 'current_gradient_charge', 'current_gradient_discharge', 'temperature_gradient_charge', 'temperature_gradient_discharge', 'voltage_charge_gradient_charge', 'voltage_charge_gradient_discharge', 'voltage_gradient_charge', 'voltage_gradient_discharge']
+2018-12-17 16:01:01.177908 - --------------------------------------------------- NEW RUN ---------------------------------------------------
+2018-12-17 16:01:01.186891 - PARAM GRID : {'C': [10, 100], 'kernel': ['rbf', 'sigmoid'], 'coef0': [0.0], 'gamma': ['auto', 1e-06], 'decision_function_shape': ['ovo', 'ovr']}
+2018-12-17 16:01:01.196373 - /!\ WARNING : DISCHARGE DATA ARE TAKE IN COUNT
+2018-12-17 16:04:50.272178 - --------------------------------------------------- NEW RUN ---------------------------------------------------
+2018-12-17 16:04:50.282162 - PARAM GRID : {'C': [10, 100], 'kernel': ['rbf', 'sigmoid'], 'coef0': [0.0], 'gamma': ['auto', 1e-06], 'decision_function_shape': ['ovo', 'ovr']}
+2018-12-17 16:04:50.289646 - /!\ WARNING : DISCHARGE DATA ARE TAKE IN COUNT
+2018-12-17 16:04:55.432215 - BEST PARAMETERS : {'C': 100, 'coef0': 0.0, 'decision_function_shape': 'ovo', 'gamma': 1e-06, 'kernel': 'rbf'}
+2018-12-17 16:04:55.577447 - FEATURES : ['current_charge_gradient_charge', 'current_charge_gradient_discharge', 'current_gradient_charge', 'current_gradient_discharge', 'temperature_gradient_charge', 'temperature_gradient_discharge', 'voltage_charge_gradient_charge', 'voltage_charge_gradient_discharge', 'voltage_gradient_charge', 'voltage_gradient_discharge']
+2018-12-17 16:05:04.564233 - PREDICTION VALIDATION : [2.0, 2.0, 1.0, 1.0, 2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 2.0, 3.0, 2.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+2018-12-17 16:05:04.576761 - F1 SCORE VALIDATION :0.7552275306377689
+2018-12-17 16:05:04.583729 - F1 SCORE TEST :0.8934727952458306
+2018-12-17 16:05:04.686009 - PREDICTION TEST : [1.0, 2.0, 2.0, 2.0, 1.0, 2.0, 1.0, 3.0, 1.0, 3.0, 2.0, 3.0, 2.0, 2.0, 3.0, 1.0, 2.0, 3.0, 3.0, 3.0, 1.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 1.0, 2.0, 3.0, 2.0]

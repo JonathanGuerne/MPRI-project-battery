@@ -166,6 +166,7 @@ class Model:
 
         prediction_test = np.around(np.mean(np.array(prediction_test_list), 0))
         self.print_log('PREDICTION TEST : {}'.format(list(prediction_test)))
+        return prediction_test
 
     def grid_search_fit(self):
         train = self.process_data(self.df_train)

@@ -18,7 +18,7 @@ class Model:
         self.type = 'charge_nb'
         self.include_discharges = include_discharges
         # Models
-        self.svm = SVC(C=0.1,kernel='rbf',degree=3,gamma=1)
+        self.svm = SVC(C=10,kernel='rbf',degree=3,gamma=0.000001, decision_function_shape='ovo')
         self.clf = GridSearchCV(self.svm, param_grid, cv=10, n_jobs=-1)
         self.models_list = []
         # Train data

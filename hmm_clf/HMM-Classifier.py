@@ -17,9 +17,9 @@ class HMM_Classifier:
             format="%(asctime)s|%(levelname)s|%(name)s|%(funcName)s|%(message)s")
 
     def load_data(self):
-        self.df_train = pd.read_pickle("mpri_challenge/training_set.pckl")
-        self.df_validation = pd.read_pickle("mpri_challenge/validation_set.pckl")
-        self.df_test = pd.read_pickle("mpri_challenge/test_set.pckl")
+        self.df_train = pd.read_pickle("datas/training_set.pckl")
+        self.df_validation = pd.read_pickle("datas/validation_set.pckl")
+        self.df_test = pd.read_pickle("datas/test_set.pckl")
 
         self.__log.info('Data load OK')
 

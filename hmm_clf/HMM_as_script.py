@@ -5,9 +5,10 @@ import pandas as pd
 from hmmlearn import hmm
 from sklearn.metrics import f1_score, confusion_matrix
 
-from data_tools import get_charge_list, remove_cols_to_df, battery_list, shuffle_df, split_training_validation, \
+
+from hmm_clf.data_tools import get_charge_list, remove_cols_to_df, battery_list, shuffle_df, split_training_validation, \
     split_by_quality, remove_cols, add_features, normalize, gradient
-from file_tools import _save
+from hmm_clf.file_tools import _save
 
 
 class HMMBattery():
@@ -206,8 +207,7 @@ def eval_loocv(df_train, validation_charges_list, validation_charges_hide, param
 
     return f1_valid, f1_train
 
-def predict(df_train,test_data_hide,params,verbose=False):
-
+def predict(df_train,test_data_hide,params=None,verbose=False):
     train_charges = get_charge_list(df_train)
     __qal_train_charges = split_by_quality(train_charges)
     qal_train_charges = remove_cols(__qal_train_charges)
@@ -228,22 +228,23 @@ def predict(df_train,test_data_hide,params,verbose=False):
 
     return predictions
 
-
-
-if __name__ == '__main__':
-
-    df_validation = pd.read_pickle("../datas/validation_set.pckl")
-    df_train = pd.read_pickle("../datas/training_set.pckl")
-    df_test = pd.read_pickle("../datas/test_set.pckl")
-
+def validation(df_validation, df_train, params=None):
     df_validation = add_features(df_validation)
-    df_validation = normalize(df_validation)
-
     df_train = add_features(df_train)
-    df_train = normalize(df_train)
 
-    df_test = add_features(df_test)
-    df_test = normalize(df_test)
+    if params is None :
+        params = {'n_iter': {1: 5, 2: 5, 3: 5},
+                  'factor': 70,
+                  'n_state': 6,
+                  'sampeling': 'None',
+                  'nb_charge_saved': 80,
+                  'covariance': 'diag'}
+
+    train_charges = get_charge_list(df_train)
+    __qal_train_charges = split_by_quality(train_charges)
+    qal_train_charges = remove_cols(__qal_train_charges)
+    for key, value in qal_train_charges.items():
+        qal_train_charges[key] = gradient(value)
 
     validation_charges_list = get_charge_list(df_validation, False, False, False)
     validation_charges_hide = []
@@ -251,14 +252,60 @@ if __name__ == '__main__':
         validation_charges_hide.append(remove_cols_to_df(charge))
     validation_charges_hide = gradient(validation_charges_hide)
 
-    test_charge_list = get_charge_list(df_test,drop_quality=True)
+    f1_validation, f1_test = eval_loocv(df_train, validation_charges_list, validation_charges_hide, params,
+                                        verbose=False)
+
+    return f1_validation, f1_test
+
+
+def validation_prediction_hmm():
+    df_validation = pd.read_pickle("datas/validation_set.pckl")
+    df_train = pd.read_pickle("datas/training_set.pckl")
+    df_test = pd.read_pickle("datas/test_set.pckl")
+
+    df_train = add_features(df_train)
+    df_validation = add_features(df_validation)
+    df_test = add_features(df_test)
+
+    validation_charges_list = get_charge_list(df_validation, False, False, False)
+    validation_charges_hide = []
+    for charge in validation_charges_list:
+        validation_charges_hide.append(remove_cols_to_df(charge))
+    validation_charges_hide = gradient(validation_charges_hide)
+
+    test_charge_list = get_charge_list(df_test, drop_quality=True)
     test_charge_hide = []
     for charge in test_charge_list:
         test_charge_hide.append(remove_cols_to_df(charge))
     test_charge_hide = gradient(test_charge_hide)
 
-    now = datetime.datetime.now()
-    file_name = now.strftime("%d-%m-%y_gradient_norm.csv")
+
+    params = {'n_iter': {1: 5, 2: 5, 3: 5},
+              'factor': 70,
+              'n_state': 6,
+              'sampeling': 'None',
+              'nb_charge_saved': 80,
+              'covariance': 'diag'}
+
+    preds = predict(df_train, test_charge_hide, params)
+    f1_valid, f1_test = eval_loocv(df_train, validation_charges_list, validation_charges_hide, params, verbose=False)
+
+    return preds, f1_valid, f1_test
+if __name__ == '__main__':
+
+    df_validation = pd.read_pickle("../datas/validation_set.pckl")
+    df_train = pd.read_pickle("../datas/training_set.pckl")
+    df_test = pd.read_pickle("../datas/test_set.pckl")
+
+    df_train = add_features(df_train)
+
+    df_test = add_features(df_test)
+
+    test_charge_list = get_charge_list(df_test,drop_quality=True)
+    test_charge_hide = []
+    for charge in test_charge_list:
+        test_charge_hide.append(remove_cols_to_df(charge))
+    test_charge_hide = gradient(test_charge_hide)
 
 
     params = {'n_iter': {1: 5, 2: 5, 3: 5},
@@ -271,7 +318,6 @@ if __name__ == '__main__':
     preds = predict(df_train,test_charge_hide,params)
     print(preds)
 
-    eval_loocv(df_train,validation_charges_list,validation_charges_hide,params, verbose=False)
 
     # from hmm_clf.Grid_search import run_grid_search
     # best_params = run_grid_search(df_train, validation_charges_list, validation_charges_hide, file_name, verbose=False)

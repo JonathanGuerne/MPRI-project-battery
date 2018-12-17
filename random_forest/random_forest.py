@@ -1,6 +1,6 @@
 import pandas as pd
 import datetime
-from Model import Model
+from random_forest.Model import Model
 
 
 class RandomForest:
@@ -18,7 +18,7 @@ class RandomForest:
         self.df_validation = df_validation
         self.df_test = df_test
         # Load the data
-        self.load_data()
+        #self.load_data()
         # Models
         self.model = Model(self.df_train, self.df_validation, self.df_test, param_grid, log, include_discharges)
         # Is discharge data include ?
